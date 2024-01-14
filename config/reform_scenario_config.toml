@@ -1,0 +1,25 @@
+[controllable]
+# key是输入角色，val是返回值来自哪个角色
+controllable_players = {"commander" = "aip"}
+
+[players]
+commander = "指挥官"
+aip = "人工智能平台"
+virtual_battlefield_env = "虚拟战场"
+red_commander = "虚拟红方指挥官"
+blue_commander = "虚拟蓝方指挥官"
+
+# 各角色的剧本,每个角色可以同时参与多个对话
+[script.aip]
+task = {"dependency" = {"commander"=["input", 0], "red_commander"=["any", 0]}, "init_script" = ""}
+
+[script.virtual_battlefield_env]
+update = {"dependency" = {"red_commander"=["input", 0], "red_commander"=0}, "init_script" = ""}
+
+[script.blue_commander]
+command = {"dependency" = {"virtual_battlefield_env"=["update", 0]}, "init_script" = ""}
+
+[script.red_commander]
+command = {"dependency" = {"virtual_battlefield_env"=["update", 0]}, "init_script" = ""}
+summerize = {"dependency" = {"virtual_battlefield_env"=["update", 0], "aip"=["task", 0]}, "init_script" = ""}
+task_choose = {"dependency" = {"aip"=["task", 0]}, "init_script" = ""}

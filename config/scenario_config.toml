@@ -1,0 +1,57 @@
+[controllable]
+# key是输入角色，val是返回值来自哪个角色
+controllable_players = {"commander" = "aip"}
+
+[players]
+commander = "指挥官"
+aip = "人工智能平台"
+virtual_battlefield_env = "虚拟战场"
+red_commander = "虚拟红方指挥官"
+blue_commander = "虚拟蓝方指挥官"
+
+# 各角色的剧本
+[script]
+commander = "战场指挥官，会向副指挥官发出一系列命令口语化的任务，任务内容包括对当前战场局势的询问、下达具体的作战任务以及协商作战方案等。"
+aip = "副指挥官，需要配合红方战场指挥官进行战场态势分析，或将将来自战场指挥官的，不具体的需求转成相对具体的作战方案，并传达给红方执行官。每次交互分成两轮，第一轮接受来自战场指挥官的指令和来自红方执行官的汇报，转换成给红方执行官的指令。第二轮次接受来自红方执行官的结果反馈，根据之前战场指挥官的指令，转换成他需要的结果。"
+virtual_battlefield_env = "虚拟战场环境，模拟以下战场环境并根据我接下来的输入更新战场态势：红蓝双方正在进行岛屿争夺战，岛屿的位置在东经133°17’，北纬21°51’附近，其中红方兵力包括：KZ核动力潜艇*2艘、地面导弹旅*3、LN级航母*1艘、WH级驱逐舰*3艘、重型轰炸机*10架、隐身歼击机*20架。蓝方的兵力包括：福特级航母*1艘、提康德罗加级巡洋舰*1艘、伯克级驱逐舰*3艘、佩里级护卫舰*2艘、补给舰*2艘，具体所携带的舰载机、舰载武器数量你可以根据资料补充，可使用卫星侦察。红蓝双方在使用探测装备对敌方军情进行探测前均无法获取敌方准确的兵力、部署信息。环境初始状态下，蓝方在岛屿西北、正北方向进行部署，红方在蓝方正北方向部署，双方平均初始距离500km"
+red_commander = "红方执行官，配合副指挥官分析战场态势，并将来自副指挥官的作战指令转换成相应的作战指令，目标是在限定时间内消灭蓝方的所有有生力量并成功登录岛屿。每次的输入都是副指挥官的指令和当前战场态势信息，在两次交互中依次交替返回各单位需要执行的指令和反馈给副指挥官的结果。"
+blue_commander = "蓝方指挥官，正在指挥蓝方作战单位进行岛屿保卫战争，需要根据实时的战场环境，指挥各作战部队选择合适的作战方案，保证在一定时间内阻止红方消灭蓝方有生力量并登陆岛屿。每次提供当前战场态势后，都返回蓝方各单位需要执行的指令。"
+
+# 各角色的初始化脚本设定，key是input use, val代表的是system output
+[init_conversation]
+commander = ["aip"]
+aip = ["red_commander"]
+red_commander = ["virtual_battlefield_env"]
+virtual_battlefield_env = ["blue_commander"]
+
+# 对话内容的顺序依赖，标记对话触发的时刻以及输入依赖，时刻均以系统每一次输入为起点(时刻1,0则代表上一轮对话的最后一次输出)，返回结果后结束
+# 同一角色在一个chat_time下可以有多个task，用于在不同场景下组合生成不一样的对话
+[chat_setting.aip.task_decomposition]
+chat_time = 1
+dependence = {"commander"=1, "red_commander"=0}
+
+[chat_setting.aip.task_debuging]
+chat_time = 1
+dependence = {"commander"=1}
+
+[chat_setting.aip.infomation_summarize]
+chat_time = 2
+dependence = {"commander"=1, "red_commander"=1}
+
+[chat_setting.virtual_battlefield_env.update]
+# 考虑到有些对话需要重复执行，增加一个-1的chat_time的设定，此时dependence中的时间依赖与1取差值得到实际的时间依赖
+# 如1代表当前轮次对话，0代表上一轮次，-1代表上上一轮次
+chat_time = -1
+dependence = {"red_commander"=1, "blue_commander"=1}
+
+[chat_setting.red_commander.task_planning]
+chat_time = 1
+dependence = {"aip"=1, "virtual_battlefield_env"=0}
+
+[chat_setting.red_commander.situation_analyse]
+chat_time = 1
+dependence = {"aip"=1, "virtual_battlefield_env"=1}
+
+[chat_setting.blue_commander.task_planning]
+chat_time = 1
+dependence = {"virtual_battlefield_env"=0}

@@ -1,0 +1,16 @@
+stages:
+  - Pre-commit Hooks
+  - Static Analysis
+  
+
+pre-commit:
+  stage: Pre-commit Hooks
+  script:
+    - env
+    - cd ${CI_PROJECT_DIR}; pre-commit run --all-files
+
+google-code-style:
+  stage: Static Analysis
+  script:
+    - pylint --rcfile=.pylintrc --reports=yes --recursive=yes src
+  when: manual
